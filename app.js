@@ -20,7 +20,7 @@ app.options('*', cors());
 // Limiter
 
 // Helmet
-app.use(helmet);
+app.use(helmet());
 
 // Request Logger
 
