@@ -3,12 +3,14 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const helmet = require('helmet');
+const { celebrate, Joi, errors } = require('celebrate');
 
 const auth = require('./middlewares/auth');
+const limiter = require('./middlewares/limiter');
+const { requestLogger, errorLogger } = require('./middlewares/logger');
 
 const { errorHandler } = require('./controllers/errorHandler');
 const NotFoundError = require('./errors/not-found-error');
-const { requestLogger, errorLogger } = require('./middlewares/logger');
 
 const { register } = require('./controllers/registration');
 const { login } = require('./controllers/login');
@@ -28,23 +30,40 @@ mongoose.connect('mongodb://localhost:27017/newsdb', {
 app.use(cors());
 app.options('*', cors());
 
-// Limiter
+app.use(limiter);
 
 app.use(helmet());
 
+// Request Logging
 app.use(requestLogger);
 
-app.post('/signup', register);
-app.post('/signin', login);
+// Routes
+app.post('/signup', celebrate({
+  body: Joi.object().keys({
+    email: Joi.string().required().email(),
+    name: Joi.string().required().min(2).max(30),
+    password: Joi.string().required(),
+  }),
+}), register);
+
+app.post('/signin', celebrate({
+  body: Joi.object().keys({
+    email: Joi.string().required().email(),
+    password: Joi.string().required(),
+  }),
+}), login);
+
 app.use('/users', auth, userRouter);
 app.use('/articles', auth, articleRouter);
-
 app.get('*', (req, res, next) => next(new NotFoundError('Requested resource not found')));
 
+// Error Logging
 app.use(errorLogger);
 
 // Celebrate Error Handler
+app.use(errors());
 
+// Centralized Error Handler
 app.use(errorHandler);
 
 app.listen(PORT);
