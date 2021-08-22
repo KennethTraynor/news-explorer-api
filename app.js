@@ -1,38 +1,48 @@
+require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const helmet = require('helmet');
 
+const { errorHandler } = require('./controllers/errorHandler');
+const NotFoundError = require('./errors/not-found-error');
+
+const { register } = require('./controllers/registration');
+const { login } = require('./controllers/login');
+const userRouter = require('./routes/users');
+const articleRouter = require('./routes/articles');
+
 const { PORT = 3000 } = process.env;
 const app = express();
+app.use(express.json());
 
-const { errorHandler } = require('./controllers/errorHandler');
-
-// Mongoose
 mongoose.connect('mongodb://localhost:27017/newsdb', {
   useNewUrlParser: true,
   useCreateIndex: true,
   useFindAndModify: false,
 });
 
-// Cors
 app.use(cors());
 app.options('*', cors());
 
 // Limiter
 
-// Helmet
 app.use(helmet());
 
 // Request Logger
 
-// Routes
+app.use('/users', userRouter);
+app.use('/articles', articleRouter);
+
+app.post('/signup', register);
+app.post('/signin', login);
+
+app.get('*', (req, res, next) => next(new NotFoundError('Requested resource not found')));
 
 // Error Logger
 
 // Celebrate Error Handler
 
-// Centralized Error Handler
 app.use(errorHandler);
 
 app.listen(PORT);
