@@ -8,6 +8,7 @@ const auth = require('./middlewares/auth');
 
 const { errorHandler } = require('./controllers/errorHandler');
 const NotFoundError = require('./errors/not-found-error');
+const { requestLogger, errorLogger } = require('./middlewares/logger');
 
 const { register } = require('./controllers/registration');
 const { login } = require('./controllers/login');
@@ -31,17 +32,16 @@ app.options('*', cors());
 
 app.use(helmet());
 
-// Request Logger
-
-app.use('/users', auth, userRouter);
-app.use('/articles', auth, articleRouter);
+app.use(requestLogger);
 
 app.post('/signup', register);
 app.post('/signin', login);
+app.use('/users', auth, userRouter);
+app.use('/articles', auth, articleRouter);
 
 app.get('*', (req, res, next) => next(new NotFoundError('Requested resource not found')));
 
-// Error Logger
+app.use(errorLogger);
 
 // Celebrate Error Handler
 
