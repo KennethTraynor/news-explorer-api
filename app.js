@@ -6,6 +6,8 @@ const helmet = require('helmet');
 const { PORT = 3000 } = process.env;
 const app = express();
 
+const { errorHandler } = require('./controllers/errorHandler');
+
 // Mongoose
 mongoose.connect('mongodb://localhost:27017/newsdb', {
   useNewUrlParser: true,
@@ -31,5 +33,6 @@ app.use(helmet());
 // Celebrate Error Handler
 
 // Centralized Error Handler
+app.use(errorHandler);
 
 app.listen(PORT);
