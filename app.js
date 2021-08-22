@@ -4,6 +4,8 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const helmet = require('helmet');
 
+const auth = require('./middlewares/auth');
+
 const { errorHandler } = require('./controllers/errorHandler');
 const NotFoundError = require('./errors/not-found-error');
 
@@ -31,8 +33,8 @@ app.use(helmet());
 
 // Request Logger
 
-app.use('/users', userRouter);
-app.use('/articles', articleRouter);
+app.use('/users', auth, userRouter);
+app.use('/articles', auth, articleRouter);
 
 app.post('/signup', register);
 app.post('/signin', login);
