@@ -2,7 +2,6 @@ const Article = require('../models/article');
 const BadRequestError = require('../errors/bad-request-error');
 const NotFoundError = require('../errors/not-found-error');
 const ForbiddenError = require('../errors/forbidden-error');
-const ConflictError = require('../errors/conflict-error');
 
 module.exports.getSavedArticles = (req, res, next) => {
   Article.find({ owner: req.user._id })
@@ -16,21 +15,10 @@ module.exports.saveArticle = (req, res, next) => {
     keyword, title, text, date, source, link, image,
   } = req.body;
 
-  Article.findOne({
-    link, owner: req.user._id,
-  })
-    .then((article) => {
-      if (article) {
-        throw new ConflictError('An article with the same link is already saved');
-      }
-    })
-    .then(() => {
-      Article.create({
-        keyword, title, text, date, source, link, image, owner: req.user._id,
-      })
-        .then((article) => Article.findById(article._id).populate('owner'))
-        .then((article) => res.status(200).send(article));
-    })
+  Article.create({
+    keyword, title, text, date, source, link, image, owner: req.user._id,
+  }).then((article) => Article.findById(article._id).populate('owner'))
+    .then((article) => res.status(200).send(article))
     .catch((err) => {
       if (err.name === 'ValidationError') {
         next(new BadRequestError('Invalid Syntax'));
