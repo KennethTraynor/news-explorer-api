@@ -2,6 +2,12 @@ const Article = require('../models/article');
 const BadRequestError = require('../errors/bad-request-error');
 const NotFoundError = require('../errors/not-found-error');
 const ForbiddenError = require('../errors/forbidden-error');
+const {
+  InsufficientPermissions,
+  InvalidSyntax,
+  ResourceNotFound,
+  InvalidID,
+} = require('../app-constants');
 
 module.exports.getSavedArticles = (req, res, next) => {
   Article.find({ owner: req.user._id })
@@ -21,7 +27,7 @@ module.exports.saveArticle = (req, res, next) => {
     .then((article) => res.status(200).send(article))
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        next(new BadRequestError('Invalid Syntax'));
+        next(new BadRequestError(InvalidSyntax));
       }
       next(err);
     });
@@ -31,10 +37,10 @@ module.exports.deleteArticle = (req, res, next) => {
   Article.findById(req.params.articleId)
     .then((article) => {
       if (!article) {
-        throw new NotFoundError('Article Not Found');
+        throw new NotFoundError(ResourceNotFound);
       }
       if (String(article.owner) !== req.user._id || !req.user._id) {
-        throw new ForbiddenError('Insufficient Permissions');
+        throw new ForbiddenError(InsufficientPermissions);
       }
     })
     .then(() => {
@@ -42,14 +48,14 @@ module.exports.deleteArticle = (req, res, next) => {
         .populate('owner')
         .then((article) => {
           if (!article) {
-            throw new NotFoundError('Article Not Found');
+            throw new NotFoundError(ResourceNotFound);
           }
           res.status(200).send(article);
         });
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        next(new BadRequestError('Invalid ID'));
+        next(new BadRequestError(InvalidID));
       }
       next(err);
     });

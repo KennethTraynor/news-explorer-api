@@ -1,10 +1,12 @@
 require('dotenv').config();
+
 const { NODE_ENV, DB_ADDRESS } = process.env;
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const helmet = require('helmet');
 const { celebrate, Joi, errors } = require('celebrate');
+const { DB_ADDRESS_DEV } = require('./app-config');
 
 const auth = require('./middlewares/auth');
 const limiter = require('./middlewares/limiter');
@@ -12,6 +14,7 @@ const { requestLogger, errorLogger } = require('./middlewares/logger');
 
 const { errorHandler } = require('./controllers/errorHandler');
 const NotFoundError = require('./errors/not-found-error');
+const { ResourceNotFound } = require('./app-constants');
 
 const { register } = require('./controllers/registration');
 const { login } = require('./controllers/login');
@@ -22,7 +25,7 @@ const { PORT = 3000 } = process.env;
 const app = express();
 app.use(express.json());
 
-mongoose.connect(NODE_ENV === 'production' ? DB_ADDRESS : 'mongodb://localhost:27017/newsdb', {
+mongoose.connect(NODE_ENV === 'production' ? DB_ADDRESS : DB_ADDRESS_DEV, {
   useNewUrlParser: true,
   useCreateIndex: true,
   useFindAndModify: false,
@@ -56,7 +59,7 @@ app.post('/signin', celebrate({
 
 app.use('/users', auth, userRouter);
 app.use('/articles', auth, articleRouter);
-app.get('*', (req, res, next) => next(new NotFoundError('Requested resource not found')));
+app.get('*', (req, res, next) => next(new NotFoundError(ResourceNotFound)));
 
 // Error Logging
 app.use(errorLogger);
