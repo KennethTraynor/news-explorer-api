@@ -31,12 +31,12 @@ mongoose.connect(NODE_ENV === 'production' ? DB_ADDRESS : 'mongodb://localhost:2
 app.use(cors());
 app.options('*', cors());
 
-app.use(limiter);
-
 app.use(helmet());
 
 // Request Logging
 app.use(requestLogger);
+
+app.use(limiter);
 
 // Routes
 app.post('/signup', celebrate({
